@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Build / packaging
+dist/
+build/
+*.egg-info/
+
+# Local AgentCore CLI state/logs
+agentcore/.cli/
+*.log
+
+# Temporary files
+/tmp/
+*.tmp
+
+# AWS CLI installer / archives
+awscliv2.zip
