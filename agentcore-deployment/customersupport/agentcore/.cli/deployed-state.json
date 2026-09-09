@@ -1,0 +1,23 @@
+{
+  "targets": {
+    "default": {
+      "resources": {
+        "runtimes": {
+          "CustomerSupportAgent": {
+            "runtimeId": "customersupport_CustomerSupportAgent-e7MC6oFL2B",
+            "runtimeArn": "arn:aws:bedrock-agentcore:us-east-1:177819261628:runtime/customersupport_CustomerSupportAgent-e7MC6oFL2B",
+            "roleArn": "arn:aws:iam::177819261628:role/AgentCore-customersupport-ApplicationAgentCustomerS-CuzYXBYhnt7v"
+          }
+        },
+        "memories": {
+          "CustomerSupportMemory": {
+            "memoryId": "CustomerSupportMemory-mXkuh4BqSK",
+            "memoryArn": "arn:aws:bedrock-agentcore:us-east-1:177819261628:memory/CustomerSupportMemory-mXkuh4BqSK"
+          }
+        },
+        "stackName": "AgentCore-customersupport-default",
+        "deployHash": "8013443cb995c593"
+      }
+    }
+  }
+}
