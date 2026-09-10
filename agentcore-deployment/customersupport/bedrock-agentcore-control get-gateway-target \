@@ -1,0 +1,60 @@
+{
+    "gatewayArn": "arn:aws:bedrock-agentcore:us-east-1:177819261628:gateway/customersupportgateway-bi9wbwaick",
+    "targetId": "6BAVUOA00F",
+    "createdAt": "2026-09-09T10:24:30.882068+00:00",
+    "updatedAt": "2026-09-09T10:34:03.201971+00:00",
+    "status": "READY",
+    "name": "CustomerSupportOrdersTarget",
+    "description": "Customer support order tracking and customer information API Gateway target",
+    "targetConfiguration": {
+        "mcp": {
+            "apiGateway": {
+                "restApiId": "vyr6af1wee",
+                "stage": "prod",
+                "apiGatewayToolConfiguration": {
+                    "toolOverrides": [
+                        {
+                            "name": "get_customer",
+                            "description": "",
+                            "path": "/customers/{customer_id}",
+                            "method": "GET"
+                        },
+                        {
+                            "name": "get_customer_orders",
+                            "description": "",
+                            "path": "/customers/{customer_id}/orders",
+                            "method": "GET"
+                        },
+                        {
+                            "name": "get_order",
+                            "description": "",
+                            "path": "/orders/{order_id}",
+                            "method": "GET"
+                        }
+                    ],
+                    "toolFilters": [
+                        {
+                            "filterPath": "/customers/{customer_id}",
+                            "methods": [
+                                "GET"
+                            ]
+                        },
+                        {
+                            "filterPath": "/customers/{customer_id}/orders",
+                            "methods": [
+                                "GET"
+                            ]
+                        },
+                        {
+                            "filterPath": "/orders/{order_id}",
+                            "methods": [
+                                "GET"
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "lastSynchronizedAt": "2026-09-09T10:34:01.972989+00:00"
+}

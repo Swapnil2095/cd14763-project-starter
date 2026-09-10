@@ -607,8 +607,25 @@ async def invoke(payload, context=None):
         )
 
         with gateway_client:
-            gateway_tools = gateway_client.list_tools_sync()
-            tools.extend(gateway_tools)
+            try:
+                gateway_tools = gateway_client.list_tools_sync()
+                tools.extend(gateway_tools)
+
+                logger.info(
+                    "Gateway connected successfully. Loaded %d tools.",
+                    len(gateway_tools),
+                )
+
+            except TimeoutError:
+                logger.exception("Gateway tool loading timed out")
+
+            except ConnectionError:
+                logger.exception("Gateway connection failed")
+
+            except Exception as exc:
+                logger.exception(
+                    "Gateway tool loading failed: %s", exc
+                )
 
             system_prompt = """
 You are a helpful customer support AI agent.
@@ -624,6 +641,23 @@ You help customers with:
 
 Use the available tools whenever they provide authoritative or
 customer-specific information.
+
+LIVE DATA AND MEMORY PRIORITY:
+- For any question about a specific customer's order, ALWAYS call the
+  appropriate Gateway order tool before answering.
+- For any request to initiate a refund, ALWAYS call the appropriate Gateway
+  refund tool before answering.
+- For any question about an existing refund or return label, ALWAYS call the
+  appropriate Gateway refund tool before answering.
+- NEVER answer a live order or refund question from memory alone.
+- Customer memory may provide historical or personalized context, but it
+  MUST NOT be treated as current order or refund system data.
+- NEVER claim that an API, Gateway, or tool returned an error unless you
+  actually attempted the corresponding tool call and received that error.
+- If a required Gateway tool call fails, clearly state that the live system
+  could not be accessed and do not substitute memory data as current data.
+- When a Gateway tool succeeds, use its returned data as the authoritative
+  source for the response.
 
 Use the knowledge base for product catalog information, return policies,
 refund timelines, loyalty program details, and order status definitions.
