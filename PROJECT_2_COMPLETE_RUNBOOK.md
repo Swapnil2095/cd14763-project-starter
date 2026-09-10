@@ -1,11 +1,12 @@
 # Project 2 Complete Command Runbook
 
-This is the operational runbook for the completed Project 2 submission.
+This runbook contains the final verification, evidence, deployment, and Git commands for Project 2.
 
-## 1. Codespace Restart
+## 1. Repository and Environment
 
 ```bash
 cd /workspaces/cd14763-project-starter
+
 python --version
 uv --version
 aws --version
@@ -21,7 +22,7 @@ aws sts get-caller-identity
 aws configure get region
 ```
 
-If required:
+Set the required region if necessary:
 
 ```bash
 aws configure set region us-east-1
@@ -31,9 +32,7 @@ aws configure set region us-east-1
 
 ```bash
 cd /workspaces/cd14763-project-starter/agentcore-deployment/customersupport
-```
 
-```bash
 agentcore status
 agentcore validate
 ```
@@ -42,6 +41,7 @@ agentcore validate
 
 ```bash
 cd /workspaces/cd14763-project-starter/agentcore-deployment/customersupport/app/CustomerSupportAgent
+
 uv sync
 python -m py_compile main.py
 ```
@@ -58,7 +58,31 @@ Verify implementation:
 grep -n "BedrockAgentCoreApp\|GATEWAY_URL\|KB_ID\|MEMORY_ID\|MemoryHook\|search_knowledge_base\|calculate_loyalty_discount\|MCPClient\|AgentCoreBrowser\|async def invoke" main.py
 ```
 
-## 4. Lambda Verification
+## 4. Synchronize Starter Code
+
+The deployed application copy should be synchronized to the starter copy before final submission:
+
+```bash
+cd /workspaces/cd14763-project-starter
+
+cp agentcore-deployment/customersupport/app/CustomerSupportAgent/main.py starter/main.py
+
+python -m py_compile starter/main.py
+```
+
+Verify the Gateway error handling:
+
+```bash
+grep -n -A25 -B5 "Gateway connected successfully" starter/main.py
+```
+
+Verify the live-data instructions:
+
+```bash
+grep -n -A25 -B5 "LIVE DATA AND MEMORY PRIORITY" starter/main.py
+```
+
+## 5. Lambda Verification
 
 ```bash
 aws lambda get-function \
@@ -74,7 +98,7 @@ aws lambda get-function \
   --query 'Configuration.FunctionArn'
 ```
 
-## 5. Orders API Verification
+## 6. Orders API Verification
 
 ```bash
 aws apigateway get-rest-api \
@@ -88,21 +112,25 @@ aws apigateway get-resources \
   --region us-east-1
 ```
 
-Direct tests:
+Direct order test:
 
 ```bash
 curl -s "https://vyr6af1wee.execute-api.us-east-1.amazonaws.com/prod/orders/ORD-001"
 ```
 
+Customer orders:
+
 ```bash
 curl -s "https://vyr6af1wee.execute-api.us-east-1.amazonaws.com/prod/customers/CUST-123/orders"
 ```
+
+Customer profile:
 
 ```bash
 curl -s "https://vyr6af1wee.execute-api.us-east-1.amazonaws.com/prod/customers/CUST-123"
 ```
 
-## 6. Gateway IAM Verification
+## 7. Gateway IAM Verification
 
 Orders API permission:
 
@@ -120,26 +148,7 @@ aws iam get-role-policy \
   --policy-name InvokeCustomerRefundProcessor
 ```
 
-If the refund permission is missing:
-
-```bash
-aws iam put-role-policy \
-  --role-name AmazonBedrockAgentCoreGatewayDefaultServiceRole1788949194768 \
-  --policy-name InvokeCustomerRefundProcessor \
-  --policy-document '{
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Sid": "InvokeCustomerRefundProcessor",
-        "Effect": "Allow",
-        "Action": "lambda:InvokeFunction",
-        "Resource": "arn:aws:lambda:us-east-1:177819261628:function:customer-refund-processor"
-      }
-    ]
-  }'
-```
-
-## 7. Knowledge Base Verification
+## 8. Knowledge Base Verification
 
 ```bash
 aws bedrock-agent-runtime retrieve \
@@ -148,9 +157,9 @@ aws bedrock-agent-runtime retrieve \
   --region us-east-1
 ```
 
-Expected information includes the electronics return policy.
+Expected: Knowledge Base results containing the electronics return policy.
 
-## 8. S3 Verification
+S3 verification:
 
 ```bash
 aws s3 ls s3://customer-support-kb-177819261628/
@@ -170,25 +179,25 @@ aws bedrock-agentcore-control get-memory \
   --region us-east-1
 ```
 
-Expected active strategies include:
+Expected active strategies:
 
 ```text
 SEMANTIC
 USER_PREFERENCE
 ```
 
-## 10. Deploy / Redeploy
-
-From:
+## 10. Deployment Verification
 
 ```bash
 cd /workspaces/cd14763-project-starter/agentcore-deployment/customersupport
+
+agentcore validate
+agentcore status
 ```
 
-Run:
+If the application has changed and needs redeployment:
 
 ```bash
-agentcore validate
 agentcore deploy
 agentcore status
 ```
@@ -205,56 +214,191 @@ For troubleshooting:
 agentcore logs --runtime CustomerSupportAgent --since 10m -n 300
 ```
 
-Always inspect the first actual exception before changing dependencies or configuration.
+Inspect the first actual exception before changing dependencies or configuration.
 
-## 12. Functional Tests
+## 12. Final RAG Evidence Test
 
-### Order tracking
+Use a clean customer and session so unrelated memory does not appear:
 
 ```bash
-agentcore invoke '{"prompt":"Can you track order ORD-001?","customer_id":"CUST-123","session_id":"t1"}'
+agentcore invoke '{"prompt":"Use the search_knowledge_base tool to answer this question. What is the return policy for electronics? Base your answer only on the information returned by the Knowledge Base. Report only the electronics return window, required item condition, accessories requirement, and Prime member return benefit. Do not mention any customer, order, refund, return-label, memory, or other information.","customer_id":"CUST-RAG-CLEAN-EVIDENCE-001","session_id":"rag-clean-evidence-001"}'
 ```
 
-### Refund initiation
+Evidence filename:
 
-```bash
-agentcore invoke '{"prompt":"I want to return my Kindle Paperwhite (ORD-002). Please initiate a refund.","customer_id":"CUST-123","session_id":"t2"}'
+```text
+Test_Evidences/New Tests/TEST 3 - KNOWLEDGE BASE (RAG).jpg
 ```
 
-### Refund status
+The evidence should clearly show the question and a successful Knowledge Base-based answer.
+
+## 13. Final MCP API Evidence Test
 
 ```bash
-agentcore invoke '{"prompt":"Please check the refund status for my order ORD-002.","customer_id":"CUST-123","session_id":"refund-status"}'
+cd /workspaces/cd14763-project-starter/agentcore-deployment/customersupport/app/CustomerSupportAgent
+
+uv run python - <<'PY'
+from strands.tools.mcp.mcp_client import MCPClient
+from mcp.client.streamable_http import streamable_http_client
+
+GATEWAY_URL = "https://customersupportgateway-bi9wbwaick.gateway.bedrock-agentcore.us-east-1.amazonaws.com/mcp"
+
+def create_transport():
+    return streamable_http_client(GATEWAY_URL)
+
+client = MCPClient(create_transport)
+
+with client:
+    tools = client.list_tools_sync()
+    print("Gateway tools loaded:", len(tools))
+    for tool in tools:
+        print("-", getattr(tool, "tool_name", getattr(tool, "name", "unknown")))
+
+    result = client.call_tool_sync(
+        "CustomerSupportOrdersTarget___get_order",
+        {"order_id": "ORD-001"}
+    )
+
+    print("\nMCP API TOOL RESULT")
+    print(result)
+PY
 ```
 
-### Return label
+Evidence filename:
 
-```bash
-agentcore invoke '{"prompt":"Please get the return label for my order ORD-002.","customer_id":"CUST-123","session_id":"return-label"}'
+```text
+Test_Evidences/New Tests/Test 4 - MCP API Tool.jpg
 ```
 
-### RAG
+Required evidence characteristics:
 
-```bash
-agentcore invoke '{"prompt":"What are the benefits of the Platinum loyalty tier?","customer_id":"CUST-123","session_id":"t3"}'
+```text
+CustomerSupportOrdersTarget___get_order
+ORD-001
+Successful result
+SHIPPED
+UPS
+TRK987654321
+isError: False
 ```
 
-### Memory session A
+## 14. Final MCP Lambda Evidence Test
 
 ```bash
-agentcore invoke '{"prompt":"Hi, I am Jane. I prefer concise responses.","customer_id":"CUST-123","session_id":"s-A"}'
+cd /workspaces/cd14763-project-starter/agentcore-deployment/customersupport/app/CustomerSupportAgent
+
+uv run python - <<'PY'
+from strands.tools.mcp.mcp_client import MCPClient
+from mcp.client.streamable_http import streamable_http_client
+
+GATEWAY_URL = "https://customersupportgateway-bi9wbwaick.gateway.bedrock-agentcore.us-east-1.amazonaws.com/mcp"
+
+def create_transport():
+    return streamable_http_client(GATEWAY_URL)
+
+client = MCPClient(create_transport)
+
+with client:
+    tools = client.list_tools_sync()
+    print("Gateway tools loaded:", len(tools))
+
+    result = client.call_tool_sync(
+        "CustomerSupportRefundTarget___initiate_refund",
+        {
+            "order_id": "ORD-001",
+            "amount": 89.99
+        }
+    )
+
+    print("\nMCP LAMBDA TOOL RESULT")
+    print(result)
+PY
 ```
 
-### Memory session B
+Evidence filename:
 
-```bash
-agentcore invoke '{"prompt":"Do you remember my name and communication preference?","customer_id":"CUST-123","session_id":"s-B"}'
+```text
+Test_Evidences/New Tests/Test 5 - MCP Lambda Tool.jpg
 ```
 
-### Loyalty
+Required evidence characteristics:
+
+```text
+CustomerSupportRefundTarget___initiate_refund
+statusCode: 200
+status: APPROVED
+amount: 89.99
+isError: False
+```
+
+## 15. Gateway Error Handling Evidence
 
 ```bash
-agentcore invoke '{"prompt":"I am a Gold member with 4250 points. Calculate my discount on a $150 standard order.","customer_id":"CUST-123","session_id":"t5"}'
+cd /workspaces/cd14763-project-starter
+
+grep -n -A25 -B5 "Gateway connected successfully" starter/main.py
+```
+
+The output should show:
+
+```text
+try:
+    gateway_tools = gateway_client.list_tools_sync()
+    ...
+except TimeoutError:
+    ...
+except ConnectionError:
+    ...
+except Exception as exc:
+    ...
+```
+
+The evidence demonstrates that Gateway loading failures are explicitly handled and logged.
+
+## 16. Order Tracking Test
+
+```bash
+cd /workspaces/cd14763-project-starter/agentcore-deployment/customersupport
+
+agentcore invoke '{"prompt":"Can you track order ORD-001?","customer_id":"CUST-123","session_id":"final-order-tracking-001"}'
+```
+
+## 17. Refund Initiation Test
+
+```bash
+agentcore invoke '{"prompt":"I want to request a refund for order ORD-001. Please use the Gateway refund tool to initiate the refund for the full order amount of $89.99. Give me the refund ID, status, amount, and refund timeline.","customer_id":"CUST-123","session_id":"final-refund-initiation-001"}'
+```
+
+## 18. Refund Status Test
+
+```bash
+agentcore invoke '{"prompt":"Please check the refund status for my order ORD-002.","customer_id":"CUST-123","session_id":"final-refund-status-001"}'
+```
+
+## 19. Return Label Test
+
+```bash
+agentcore invoke '{"prompt":"Please get the return label for my order ORD-002.","customer_id":"CUST-123","session_id":"final-return-label-001"}'
+```
+
+## 20. Memory Test
+
+Session A:
+
+```bash
+agentcore invoke '{"prompt":"Hi, I am Jane. I prefer concise responses.","customer_id":"CUST-MEMORY-EVIDENCE-001","session_id":"memory-A-final"}'
+```
+
+Session B:
+
+```bash
+agentcore invoke '{"prompt":"Do you remember my name and communication preference?","customer_id":"CUST-MEMORY-EVIDENCE-001","session_id":"memory-B-final"}'
+```
+
+## 21. Loyalty Test
+
+```bash
+agentcore invoke '{"prompt":"I am a Gold member with 4250 points. Calculate my discount on a $150 standard order.","customer_id":"CUST-LOYALTY-EVIDENCE-001","session_id":"loyalty-final-001"}'
 ```
 
 Expected:
@@ -269,15 +413,15 @@ Points earned: 150
 Remaining points: 250
 ```
 
-### Browser
+## 22. Browser Test
 
 ```bash
-agentcore invoke '{"prompt":"Go to https://www.amazon.com and tell me the page title.","customer_id":"CUST-123","session_id":"t6"}'
+agentcore invoke '{"prompt":"Go to https://www.amazon.com and tell me the page title.","customer_id":"CUST-BROWSER-EVIDENCE-001","session_id":"browser-final-001"}'
 ```
 
-## 13. CloudWatch
+## 23. CloudWatch Verification
 
-Find log groups:
+List log groups:
 
 ```bash
 aws logs describe-log-groups \
@@ -287,7 +431,7 @@ aws logs describe-log-groups \
 
 Identify the AgentCore runtime log group in the AWS Console.
 
-Create:
+Final monitoring evidence should show:
 
 ```text
 Metric filter: ERROR
@@ -295,50 +439,54 @@ Alarm: error count > 5
 Evaluation period: 5 minutes
 ```
 
-Capture the final alarm configuration as:
+Recommended screenshot:
 
 ```text
 Test_Evidences/Evidence-CloudWatch-Alarm.jpg
 ```
 
-## 14. Final Code Verification
+Only mark this item complete after the screenshot has actually been captured and committed.
+
+## 24. Final Code Verification
 
 ```bash
 cd /workspaces/cd14763-project-starter/agentcore-deployment/customersupport/app/CustomerSupportAgent
+
 python -m py_compile main.py
 ```
 
-## 15. Final Deployment Verification
-
-```bash
-cd /workspaces/cd14763-project-starter/agentcore-deployment/customersupport
-agentcore validate
-agentcore status
-agentcore logs --runtime CustomerSupportAgent --since 30m -n 100
-```
-
-## 16. Git Verification
+Starter copy:
 
 ```bash
 cd /workspaces/cd14763-project-starter
+
+python -m py_compile starter/main.py
+```
+
+## 25. Final Git Verification
+
+```bash
+cd /workspaces/cd14763-project-starter
+
 git status
 git diff
 ```
 
-Before committing, ensure no credentials, tokens, temporary archives, or local caches are present.
+Check that there are no credentials, tokens, temporary archives, or local caches.
 
-Commit:
+## 26. Final Commit and Push
 
 ```bash
-git add README.md PROJECT_2_COMPLETE_RUNBOOK.md PROJECT_2_REFLECTION.md Test_Evidences/ starter/ agentcore-deployment/
+cd /workspaces/cd14763-project-starter
+
+git add README.md PROJECT_2_COMPLETE_RUNBOOK.md PROJECT_2_REFLECTION.md PROJECT_2_EVIDENCE_INDEX.md Test_Evidences/ starter/ agentcore-deployment/
+
 git status
-git commit -m "Finalize Project 2 submission"
+
+git commit -m "Finalize Project 2 submission and evidence"
+
 git push origin main
-```
 
-After pushing:
-
-```bash
 git status
 ```
 
@@ -346,4 +494,31 @@ Expected:
 
 ```text
 nothing to commit, working tree clean
+```
+
+## 27. Final Submission Review
+
+Before submitting to Udacity:
+
+```text
+1. Runtime status is READY
+2. Gateway has six tools
+3. RAG test succeeds
+4. MCP API test succeeds
+5. MCP Lambda test succeeds
+6. Order tracking succeeds
+7. Refund initiation succeeds
+8. Refund status succeeds
+9. Return label succeeds
+10. Memory test succeeds
+11. Loyalty calculation succeeds
+12. Browser test succeeds
+13. Runtime logs are available
+14. CloudWatch alarm evidence is present
+15. All required screenshots are in Test_Evidences
+16. README and runbook are updated
+17. Reflection is present
+18. GitHub main branch contains the final code
+19. No credentials are committed
+20. Working tree is clean
 ```

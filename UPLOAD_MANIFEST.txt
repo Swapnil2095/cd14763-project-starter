@@ -1,0 +1,20 @@
+PROJECT 2 FINAL DOCUMENT PACKAGE
+
+Upload/replace these files in the repository root:
+
+1. README.md
+2. PROJECT_2_COMPLETE_RUNBOOK.md
+3. PROJECT_2_REFLECTION.md
+4. PROJECT_2_EVIDENCE_INDEX.md
+
+Existing Test_Evidences/New Tests screenshots should be retained.
+
+Recommended existing/new evidence:
+- Test_Evidences/New Tests/TEST 3 - KNOWLEDGE BASE (RAG).jpg
+- Test_Evidences/New Tests/Test 4 - MCP API Tool.jpg
+- Test_Evidences/New Tests/Test 5 - MCP Lambda Tool.jpg
+
+Potentially still required:
+- Test_Evidences/Evidence-CloudWatch-Alarm.jpg
+
+The package does not replace starter/main.py because that file has already been synchronized and pushed.
